@@ -40,7 +40,10 @@ public class OrderService {
     final Order completedOrder = getOrder(orderId);
     synchronized (completedOrder) {
       if (!completedOrder.getStatus().equals(OrderStatus.DRAFT)) {
-        throw new IllegalArgumentException("Order is already completed");
+        throw new IllegalArgumentException("Order is already completed or canceled");
+      }
+      if (completedOrder.getPancakeCount() == 0) {
+        throw new IllegalArgumentException("Order must have at least one pancake");
       }
       completedOrder.setStatus(OrderStatus.COMPLETED);
       completedOrders.add(orderId);
@@ -65,9 +68,13 @@ public class OrderService {
   public void deliverOrder(UUID orderId) {
     final Order deliveredOrder = getOrder(orderId);
     synchronized (deliveredOrder) {
+      if (deliveredOrder.getStatus().equals(OrderStatus.DELIVERED)) {
+        return; // If multiple threads try to deliver the same order, return without throwing an exception
+      }
       if (!deliveredOrder.getStatus().equals(OrderStatus.PREPARED)) {
         throw new IllegalArgumentException("Order needs to be prepared before it can be delivered");
       }
+      deliveredOrder.setStatus(OrderStatus.DELIVERED);
       orderMap.remove(orderId);
       preparedOrders.remove(orderId);
     }

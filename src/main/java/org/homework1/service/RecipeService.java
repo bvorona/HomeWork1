@@ -33,10 +33,7 @@ public class RecipeService {
   }
 
   private Ingredient createIngredientInternal(String name) {
-    validateName(name);
-    if (ingredientNames.contains(name)) {
-      throw new IllegalArgumentException("Ingredient with name " + name + " already exists");
-    }
+    validateIngredientName(name);
     Ingredient ingredient = new Ingredient(name);
     ingredientMap.put(ingredient.getId(), ingredient);
     ingredientNames.add(name);
@@ -58,7 +55,7 @@ public class RecipeService {
         .map(Recipe::getName)
         .collect(Collectors.toSet());
     if (!usedInRecipes.isEmpty()) {
-      throw new IllegalArgumentException("Ingredient is used in recipes: " + usedInRecipes);
+      throw new IllegalArgumentException("Ingredient is used in recipes: " + String.join(", ", usedInRecipes));
     }
     final Ingredient removed = ingredientMap.remove(id);
     if (removed == null) {
@@ -172,6 +169,13 @@ public class RecipeService {
     }
   }
 
+  private void validateIngredientName(String name) {
+    validateName(name);
+    if (ingredientNames.contains(name)) {
+      throw new IllegalArgumentException("Ingredient with name " + name + " already exists");
+    }
+  }
+
   private void validateRecipeName(String name) {
     validateName(name);
     if (recipeNames.contains(name)) {
@@ -202,13 +206,15 @@ public class RecipeService {
       throw new IllegalArgumentException("Recipe must have at least one ingredient");
     }
     if (ingredients.size() > MAX_NUMBER_OF_INGREDIENTS) {
-      throw new IllegalArgumentException("Recipe cannot have more than 10 ingredients");
+      throw new IllegalArgumentException("Recipe cannot have more than " + MAX_NUMBER_OF_INGREDIENTS + " ingredients");
     }
     final Set<UUID> unknownIngredients = ingredients.stream()
         .filter(ingredient -> !ingredientMap.containsKey(ingredient))
         .collect(Collectors.toSet());
     if (!unknownIngredients.isEmpty()) {
-      throw new IllegalArgumentException("Unknown ingredients: " + unknownIngredients);
+      throw new IllegalArgumentException("Unknown ingredients: " + unknownIngredients.stream()
+          .map(Objects::toString)
+          .collect(Collectors.joining(", ")));
     }
   }
 }

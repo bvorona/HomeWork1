@@ -8,10 +8,7 @@ import org.homework1.model.Pancake;
 import org.homework1.util.IntegerRange;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -244,6 +241,14 @@ public class OrderServiceTest {
   }
 
   @Test
+  public void testCompleteOrder_empty_throwsException() {
+    UUID orderId = orderService.createOrder(1, 101);
+
+    assertThrows(IllegalArgumentException.class, () ->
+        orderService.completeOrder(orderId), "Should throw exception when completing an empty order");
+  }
+
+  @Test
   public void testPrepareOrder_alreadyPrepared_throwsException() {
     UUID orderId = orderService.createOrder(1, 101);
     orderService.addPancake(orderId, recipeId);
@@ -258,7 +263,7 @@ public class OrderServiceTest {
   public void testAddPancake_invalidIngredient_throwsException() {
     UUID orderId = orderService.createOrder(1, 101);
     UUID invalidIngredientId = UUID.randomUUID();
-    List<UUID> ingredients = Arrays.asList(invalidIngredientId);
+    List<UUID> ingredients = Collections.singletonList(invalidIngredientId);
 
     assertThrows(IllegalArgumentException.class, () -> orderService.addPancake(orderId, ingredients),
         "Should throw exception for invalid ingredient ID");
